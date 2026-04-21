@@ -1,8 +1,12 @@
 {
-  "name": "wild-niche-animalers",
-  "version": "2.0.0",
+  "name": "frontier-engine",
+  "version": "1.0.0",
   "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
-    "discord.js": "^14.14.1"
+    "discord.js": "^14.14.1",
+    "express": "^4.18.2"
   }
 }
