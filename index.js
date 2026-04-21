@@ -1,196 +1,234 @@
-const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder, ComponentType } = require('discord.js');
+            const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
 const express = require('express');
 
+// --- KEEP-ALIVE ---
 const app = express();
-app.get('/', (req, res) => res.send('Frontier Engine: SINGULARITY READY'));
+app.get('/', (req, res) => res.send('Wild Niche Animalers: MASTER ENGINE ONLINE'));
 app.listen(3000);
 
 const client = new Client({ 
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] 
 });
 
-// --- THE COMPLETE CHARACTER DATABASE ---
-const Characters = {
-    'Gabor': { 
-        rarity: 'Common', hp: 100, atk: 15, 
-        std_img: 'https://cdn.discordapp.com/attachments/1311023058819219551/1496247883106877560/Screenshot_20260411-035900.png', 
-        vnt_img: 'https://cdn.discordapp.com/attachments/1311023058819219551/1496245909389049856/017fc814809cfd1cc46d385b277248a9.png', 
-        vnt_name: 'The Noober One', vnt_rarity: 'Legendary' 
-    },
-    'Helper': { 
-        rarity: 'Uncommon', hp: 120, atk: 18, 
-        std_img: 'https://cdn.discordapp.com/attachments/1311023058819219551/1496261889519522003/8b601fce2f11faa6709f1158f6efdeea.png', 
-        vnt_img: null 
-    },
-    'Laggyboi': { rarity: 'Rare', hp: 110, atk: 25, std_img: 'https://cdn.discordapp.com/attachments/1311023058819219551/1496246942685069372/Screenshot_20260411-035737.png', vnt_img: null },
-    'Jay': { 
-        rarity: 'Legendary', hp: 250, atk: 30, 
-        std_img: 'https://cdn.discordapp.com/attachments/1311023058819219551/1496247062285783130/Screenshot_20260411-021057.png', 
-        vnt_name: 'Randomizing', vnt_rarity: 'Mythical' 
-    },
-    'Louka': { 
-        rarity: 'Legendary', hp: 260, atk: 28, 
-        std_img: 'https://cdn.discordapp.com/attachments/1311023058819219551/1496245898064302161/dc7eca4c7e7c87a5c51b4739b4543168.webp', 
-        vnt_img: 'https://cdn.discordapp.com/attachments/1311023058819219551/1496250110072455229/Screenshot_20240402_222835_Discord.jpg', 
-        vnt_name: 'Galactic', vnt_rarity: 'Singularity' 
-    },
-    'Besumss': { 
-        rarity: 'Legendary', hp: 320, atk: 35, 
-        std_img: 'https://cdn.discordapp.com/attachments/1311023058819219551/1496246967934648380/Screenshot_20260411-020944.png', 
-        vnt_img: 'https://cdn.discordapp.com/attachments/1311023058819219551/1496249902118731906/Untitled43_20260412135224.png', 
-        vnt_name: 'Wheelchair', vnt_rarity: 'Mythical' 
-    },
-    'Smile': { 
-        rarity: 'Mythical', hp: 200, atk: 40, 
-        std_img: 'https://cdn.discordapp.com/attachments/1311023058819219551/1496245904477261834/Screenshot_20260421-222154.png', 
-        vnt_img: 'https://cdn.discordapp.com/attachments/1311023058819219551/1496249911639806143/Screenshot_20260411-035838.png', 
-        vnt_name: 'Certified Pan', vnt_rarity: 'Godly' 
-    },
-    'Divine': { rarity: 'Godly', hp: 450, atk: 55, std_img: 'https://cdn.discordapp.com/attachments/1311023058819219551/1496246990672236544/Screenshot_20260411-020928.png', vnt_img: null }
+// --- DATA & RARITIES ---
+const Rarities = {
+    COMMON:      { color: '#808080', label: 'Common' },
+    UNCOMMON:    { color: '#31FF00', label: 'Uncommon' },
+    RARE:        { color: '#0070FF', label: 'Rare' },
+    LEGENDARY:   { color: '#FFA500', label: 'Legendary' },
+    MYTHICAL:    { color: '#A335EE', label: 'Mythical' },
+    GODLY:       { color: '#FF0000', label: 'Godly' },
+    SINGULARITY: { color: '#00FBFF', label: 'Singularity' }
 };
 
-const UserData = new Map(); 
+const Characters = {
+    'Gabor': {
+        hp: 400, img: 'https://cdn.discordapp.com/attachments/1311023058819219551/1496247883106877560/Screenshot_20260411-035900.png',
+        variant: { name: 'The Noober One', tier: 'LEGENDARY', img: 'https://cdn.discordapp.com/attachments/1311023058819219551/1496245909389049856/017fc814809cfd1cc46d385b277248a9.png' },
+        abilities: {
+            melee: { name: '👊 Noob Slap', dmg: 20, charge: 15 },
+            skill1: { name: '🔥 Lag Spike', dmg: 40, charge: 25 },
+            skill2: { name: '⚡ Server Crash', dmg: 50, charge: 25 },
+            skill3: { name: '🌀 Potato Shield', dmg: 10, charge: 35 },
+            ultimate: { name: '🌈 IMAGINARY: BEIGE', dmg: 10000 }
+        }
+    },
+    'Louka': {
+        hp: 600, img: 'https://cdn.discordapp.com/attachments/1311023058819219551/1496245898064302161/dc7eca4c7e7c87a5c51b4739b4543168.webp',
+        variant: { name: 'Galactic Louka', tier: 'SINGULARITY', img: 'https://cdn.discordapp.com/attachments/1311023058819219551/1496250110072455229/Screenshot_20240402_222835_Discord.jpg' },
+        abilities: {
+            melee: { name: '👊 Star Punch', dmg: 45, charge: 10 },
+            skill1: { name: '🔥 Supernova', dmg: 80, charge: 20 },
+            skill2: { name: '⚡ Quasar Beam', dmg: 95, charge: 20 },
+            skill3: { name: '🌀 Black Hole', dmg: 110, charge: 20 },
+            ultimate: { name: '🌈 EVENT HORIZON', dmg: 1500 }
+        }
+    },
+    'Smile': {
+        hp: 350, img: 'https://via.placeholder.com/150?text=Smile',
+        variant: { name: 'Certified Pan Smile', tier: 'LEGENDARY', img: 'https://via.placeholder.com/150?text=Certified+Pan+Smile' },
+        abilities: {
+            melee: { name: '👊 Grin Strike', dmg: 30, charge: 20 },
+            skill1: { name: '🔥 Pan Bash', dmg: 60, charge: 25 },
+            skill2: { name: '⚡ Certified Flash', dmg: 50, charge: 25 },
+            skill3: { name: '🌀 Scary Face', dmg: 15, charge: 30 },
+            ultimate: { name: '🌈 GOLDEN FRY', dmg: 999 }
+        }
+    },
+    'Besumss': {
+        hp: 500, img: 'https://via.placeholder.com/150?text=Besumss',
+        variant: { name: 'Wheelchair Besumss', tier: 'MYTHICAL', img: 'https://via.placeholder.com/150?text=Wheelchair+Besumss' },
+        abilities: {
+            melee: { name: '👊 Heavy Swing', dmg: 35, charge: 10 },
+            skill1: { name: '🔥 Rolling Tackle', dmg: 55, charge: 20 },
+            skill2: { name: '⚡ Metal Crash', dmg: 70, charge: 20 },
+            skill3: { name: '🌀 Iron Wall', dmg: 5, charge: 40 },
+            ultimate: { name: '🌈 WHEEL OF DOOM', dmg: 1200 }
+        }
+    },
+    'Jay': {
+        hp: 400, img: 'https://via.placeholder.com/150?text=Jay',
+        variant: { name: 'Randomizing Jay', tier: 'MYTHICAL', img: 'https://via.placeholder.com/150?text=Randomizing+Jay' },
+        abilities: {
+            melee: { name: '👊 Quick Jab', dmg: 25, charge: 20 },
+            skill1: { name: '🔥 Random Burst', dmg: 45, charge: 25 },
+            skill2: { name: '⚡ Glitch Step', dmg: 30, charge: 30 },
+            skill3: { name: '🌀 Shuffle', dmg: 0, charge: 50 },
+            ultimate: { name: '🌈 JACKPOT CANNON', dmg: 800 }
+        }
+    }
+};
+
+const UserData = new Map();
+const BattleStates = new Map();
 
 function getUser(id) {
-    if (!UserData.has(id)) {
-        UserData.set(id, { 
-            wc: 100, nc: 0, inventory: [], achievements: [], 
-            titles: ['Traveler'], activeTitle: 'Traveler', 
-            premiumUntil: 0, isPermPremium: false, boughtItems: []
-        });
-    }
+    if (!UserData.has(id)) UserData.set(id, { wc: 1000, collection: [], titles: ['Traveler'], activeTitle: 'Traveler' });
     return UserData.get(id);
 }
 
-// --- SLASH COMMANDS (READY EVENT) ---
+// --- COMMAND REGISTRATION ---
 client.on('ready', async () => {
     const commands = [
-        new SlashCommandBuilder().setName('spawn').setDescription('Find a character in the Frontier'),
-        new SlashCommandBuilder().setName('shop').setDescription('Open the Frontier Store'),
-        new SlashCommandBuilder()
-            .setName('profile')
-            .setDescription('View profile')
-            .addUserOption(o => o.setName('target').setDescription('The user to view')), // Fixed: Added description
-        new SlashCommandBuilder().setName('achievements').setDescription('View your medals'),
-        new SlashCommandBuilder().setName('upvote').setDescription('Get 12h of Free Premium'),
-        new SlashCommandBuilder().setName('titles').setDescription('Equip your titles')
+        new SlashCommandBuilder().setName('spawn').setDescription('Search for a Wild Niche character'),
+        new SlashCommandBuilder().setName('shop').setDescription('Open the general store'),
+        new SlashCommandBuilder().setName('profile').setDescription('View your collection and coins'),
+        new SlashCommandBuilder().setName('help').setDescription('Learn how to play')
     ];
-
-    try {
-        await client.application.commands.set(commands);
-        console.log("🤠 Frontier Engine Online & Commands Registered!");
-    } catch (err) {
-        console.error("❌ Error registering commands:", err);
-    }
+    await client.application.commands.set(commands);
+    console.log("🤠 Wild Niche Animalers is READY!");
 });
 
+// --- INTERACTION HANDLER ---
 client.on('interactionCreate', async (i) => {
-    if (!i.isChatInputCommand() && !i.isButton()) return;
-    
     const u = getUser(i.user.id);
-    const isPremium = u.isPermPremium || u.premiumUntil > Date.now();
 
-    // Wealth/Shop Achievement Checks
-    if (u.wc >= 11000 && !u.achievements.includes('💰 Wealthy Individual')) u.achievements.push('💰 Wealthy Individual');
-    if (u.wc >= 55000 && !u.achievements.includes('💎 Very Wealthy Individual')) u.achievements.push('💎 Very Wealthy Individual');
-    if (u.boughtItems.length >= 6 && !u.achievements.includes('🏬 Shopaholic')) u.achievements.push('🏬 Shopaholic');
-
-    // --- 1. SPAWN SYSTEM ---
-    if (i.commandName === 'spawn') {
-        const roll = Math.random() * 100;
-        let tier = roll < 0.1 ? 'Singularity' : roll < 1 ? 'Godly' : roll < 5 ? 'Mythical' : roll < 15 ? 'Legendary' : roll < 35 ? 'Rare' : roll < 60 ? 'Uncommon' : 'Common';
-
-        const pool = Object.keys(Characters).filter(c => Characters[c].rarity === tier || (Characters[c].vnt_rarity === tier));
-        const charKey = pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : 'Gabor';
-        const char = Characters[charKey];
-        const isVariant = Math.random() < 0.2 && char.vnt_img;
-
-        const spawnEmbed = new EmbedBuilder()
-            .setTitle(isVariant ? `✨ VARIANT DETECTED: ${char.vnt_name}` : `❗ NEW CHARACTER`)
-            .setImage(isVariant ? char.vnt_img : char.std_img)
-            .setColor(isVariant ? '#000000' : '#8B4513')
-            .setDescription(`**Character:** ${charKey}\n**Rarity:** ${isVariant ? char.vnt_rarity : char.rarity}`);
-
-        const btns = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId(`claim_${charKey}`).setLabel('🤝 CLAIM').setStyle(ButtonStyle.Success),
-            new ButtonBuilder().setCustomId(`fight_${charKey}_${isVariant}`).setLabel('⚔️ FIGHT').setStyle(ButtonStyle.Danger)
-        );
-        return i.reply({ embeds: [spawnEmbed], components: [btns] });
+    // 1. HELP COMMAND
+    if (i.commandName === 'help') {
+        const hEmbed = new EmbedBuilder()
+            .setTitle('📖 WILD NICHE ANIMALERS GUIDE')
+            .setColor('#F1C40F')
+            .addFields(
+                { name: '🐾 Spawning', value: 'Use `/spawn` to find characters. 25% chance for a **Variant** to appear!' },
+                { name: '⚔️ Combat', value: 'Attack to build your **Ultimate Meter**. Once it hits 100%, you can use your most powerful move.' },
+                { name: '🌌 Singularity Raids', value: 'Singularity variants like **Galactic Louka** allow everyone to fight. Most damage wins the claim!' },
+                { name: '💎 Rarities', value: 'Common, Uncommon, Rare, Legendary, Mythical, Godly, **SINGULARITY**.' }
+            );
+        return i.reply({ embeds: [hEmbed] });
     }
 
-    // --- 2. BATTLE SYSTEM ---
-    if (i.isButton() && i.customId.startsWith('fight')) {
-        const [_, name, variant] = i.customId.split('_');
-        let playerHP = 100, enemyHP = 400, didRevive = false, didSwitch = false;
+    // 2. SHOP COMMAND
+    if (i.commandName === 'shop') {
+        const sEmbed = new EmbedBuilder().setTitle('🌵 SHOP').setColor('#2ECC71').setDescription(`💰 Balance: ${u.wc} WC`);
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('buy_bandage').setLabel('Buy Bandage (50)').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId('buy_reroll').setLabel('Buy Re-Roll (500)').setStyle(ButtonStyle.Success)
+        );
+        return i.reply({ embeds: [sEmbed], components: [row] });
+    }
 
-        const bEmbed = new EmbedBuilder()
-            .setTitle(`⚔️ BATTLE: VS ${name.toUpperCase()}`)
-            .addFields({ name: 'Your HP', value: `${playerHP}/100`, inline: true }, { name: 'Enemy HP', value: `${enemyHP}/400`, inline: true })
-            .setColor('#FF0000');
+    // 3. SPAWN COMMAND
+    if (i.commandName === 'spawn') {
+        const pool = Object.keys(Characters);
+        const key = pool[Math.floor(Math.random() * pool.length)];
+        const char = Characters[key];
+        const isVar = Math.random() < 0.25 && char.variant;
+
+        const tier = isVar ? char.variant.tier : 'COMMON';
+        const name = isVar ? char.variant.name : key;
+        const hp = isVar ? char.hp * 3 : char.hp;
+
+        const embed = new EmbedBuilder()
+            .setTitle(`✨ ${tier}: ${name.toUpperCase()}`)
+            .setImage(isVar ? char.variant.img : char.img)
+            .setColor(Rarities[tier].color)
+            .setDescription(`**HP:** ${hp}\n${tier === 'SINGULARITY' ? "🌌 **RAID EVENT:** Most damage wins!" : "Fight to claim!"}`);
 
         const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('atk').setLabel('⚔️ STRIKE').setStyle(ButtonStyle.Danger),
-            new ButtonBuilder().setCustomId('sw').setLabel('🔄 SWITCH').setStyle(ButtonStyle.Secondary)
+            new ButtonBuilder().setCustomId(`init_fight_${key}_${!!isVar}`).setLabel('⚔️ ENTER BATTLE').setStyle(ButtonStyle.Danger)
         );
 
-        const msg = await i.reply({ embeds: [bEmbed], components: [row], fetchReply: true });
-        const collector = msg.createMessageComponentCollector({ time: 60000 });
+        const msg = await i.reply({ embeds: [embed], components: [row], fetchReply: true });
+        BattleStates.set(msg.id, { hp, name, charKey: key, isVar: !!isVar, tier, board: {}, meter: {} });
+    }
 
-        collector.on('collect', async b => {
-            if (b.user.id !== i.user.id) return b.reply({ content: "Not your battle!", ephemeral: true });
-            if (b.customId === 'sw') didSwitch = true;
-            
-            if (name === 'Gabor' && variant === 'true' && playerHP > 1) {
-                playerHP = 1; didRevive = true;
-                bEmbed.setTitle("✨ THE HONOURED ONE AWAKENS").setDescription("`Throughout Heaven and Earth... I alone am the Noober one.`");
+    // 4. BUTTON LOGIC (BATTLE & SHOP)
+    if (i.isButton()) {
+        const state = BattleStates.get(i.message.id);
+        
+        // Shop Logic
+        if (i.customId.startsWith('buy_')) {
+            const cost = i.customId.includes('bandage') ? 50 : 500;
+            if (u.wc < cost) return i.reply({ content: "Insufficient WC!", ephemeral: true });
+            u.wc -= cost;
+            return i.reply({ content: `✅ Purchased! Balance: ${u.wc}`, ephemeral: true });
+        }
+
+        if (!state) return;
+
+        // Battle Navigation
+        if (i.customId.startsWith('init_fight') || i.customId === 'menu_back') {
+            const m = state.meter[i.user.id] || 0;
+            const embed = EmbedBuilder.from(i.message.embeds[0]).setDescription(`**HP:** ${state.hp}\n**💠 YOUR METER:** ${m}%`);
+            const row1 = new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId('btn_atk').setLabel('⚔️ ATTACK').setStyle(ButtonStyle.Primary),
+                new ButtonBuilder().setCustomId('btn_act').setLabel('💬 ACT').setStyle(ButtonStyle.Secondary)
+            );
+            const row2 = new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId('btn_item').setLabel('🎒 ITEMS').setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId('btn_spare').setLabel('💛 SPARE').setStyle(ButtonStyle.Secondary)
+            );
+            return i.update({ embeds: [embed], components: [row1, row2] });
+        }
+
+        // Attack Menu
+        if (i.customId === 'btn_atk') {
+            const char = Characters[state.charKey];
+            const m = state.meter[i.user.id] || 0;
+            const r1 = new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId('hit_melee').setLabel(char.abilities.melee.name).setStyle(ButtonStyle.Danger),
+                new ButtonBuilder().setCustomId('hit_skill1').setLabel(char.abilities.skill1.name).setStyle(ButtonStyle.Danger),
+                new ButtonBuilder().setCustomId('hit_skill2').setLabel(char.abilities.skill2.name).setStyle(ButtonStyle.Danger)
+            );
+            const r2 = new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId('hit_skill3').setLabel(char.abilities.skill3.name).setStyle(ButtonStyle.Danger),
+                new ButtonBuilder().setCustomId('hit_ultimate').setLabel(`🌈 ${char.abilities.ultimate.name}`).setStyle(ButtonStyle.Success).setDisabled(m < 100),
+                new ButtonBuilder().setCustomId('menu_back').setLabel('🔙 BACK').setStyle(ButtonStyle.Secondary)
+            );
+            return i.update({ components: [r1, r2] });
+        }
+
+        // Combat Hit
+        if (i.customId.startsWith('hit_')) {
+            const type = i.customId.split('_')[1];
+            const char = Characters[state.charKey];
+            const move = char.abilities[type];
+
+            state.meter[i.user.id] = Math.min(100, (state.meter[i.user.id] || 0) + (move.charge || 0));
+            state.hp -= move.dmg;
+            state.board[i.user.id] = (state.board[i.user.id] || 0) + move.dmg;
+
+            // Gabor Cinematic
+            if (state.charKey === 'Gabor' && state.isVar && type === 'ultimate') {
+                const enl = new EmbedBuilder().setTitle("✨ THE HONOURED ONE").setColor('#F5F5DC').setDescription("**Gabor:** \"I alone am the Honored One.\"");
+                await i.update({ embeds: [enl], components: [] });
+                setTimeout(async () => {
+                    enl.setTitle("☢️ TECHNIQUE: BEIGE").setImage('https://media.tenor.com/7p40PZ7vV00AAAAC/low-quality.gif');
+                    await i.editReply({ embeds: [enl] });
+                }, 4000);
             }
 
-            enemyHP -= (didRevive ? 200 : 50);
-            if (enemyHP <= 0) {
-                if (didRevive && playerHP === 1 && !didSwitch) u.titles.push('The Honoured One');
-                u.wc += 350;
-                await b.update({ content: "🏆 **VICTORY!** Wild Coins earned.", embeds: [], components: [] });
-                collector.stop();
-            } else {
-                await b.update({ embeds: [bEmbed.setFields({ name: 'Your HP', value: `${playerHP}/100`, inline: true }, { name: 'Enemy HP', value: `${enemyHP}/400`, inline: true })] });
+            // Win Condition
+            if (state.hp <= 0) {
+                const winnerId = Object.keys(state.board).reduce((a, b) => state.board[a] > state.board[b] ? a : b);
+                const winner = await client.users.fetch(winnerId);
+                getUser(winnerId).collection.push(state.name);
+                BattleStates.delete(i.message.id);
+                return i.update({ content: `🏆 **${state.name}** was claimed by **${winner.username}**!`, embeds: [], components: [] });
             }
-        });
-    }
 
-    // --- 3. SHOP SYSTEM ---
-    if (i.commandName === 'shop') {
-        const shop = new EmbedBuilder()
-            .setTitle('🌵 FRONTIER STORE')
-            .setDescription(`💰 **WC:** ${u.wc} | 💎 **NC:** ${u.nc}\n${isPremium ? '🌟 **PREMIUM DISCOUNT ACTIVE**' : ''}`)
-            .addFields(
-                { name: '🩹 Bandage (50)', value: 'Heals 30 HP' },
-                { name: '🎲 Re-Roll (500)', value: 'New Spawn' },
-                { name: '🧿 Void Lens (1.5k)', value: 'Singularity Luck' },
-                { name: '🧲 Horseshoe (2.5k)', value: 'Variant Luck' },
-                { name: '🧪 Gamma Radiation (5k)', value: 'Power upgrade' },
-                { name: '🛸 Warp Drive (10k)', value: 'Legendary Spawn' }
-            ).setColor('#8B4513');
-        return i.reply({ embeds: [shop] });
-    }
-
-    // --- 4. PROFILE ---
-    if (i.commandName === 'profile') {
-        const target = i.options.getUser('target') || i.user;
-        const d = getUser(target.id);
-        const p = d.isPermPremium || d.premiumUntil > Date.now();
-        const prof = new EmbedBuilder()
-            .setTitle(`${p ? '🌟 ' : ''}${target.username}'s Profile`)
-            .addFields(
-                { name: 'Title', value: `< ${d.activeTitle} >` },
-                { name: 'Balance', value: `💰 ${d.wc} WC | 💎 ${d.nc} NC` },
-                { name: 'Medals', value: d.achievements.join(', ') || 'None' }
-            ).setColor(p ? '#00FFFF' : '#8B4513');
-        return i.reply({ embeds: [prof] });
-    }
-
-    if (i.commandName === 'upvote') {
-        u.premiumUntil = Date.now() + (12 * 60 * 60 * 1000);
-        return i.reply("🌟 Upvoted! Premium benefits active for 12 hours.");
+            return i.update({ content: `💥 **${move.name}**! Enemy HP: ${state.hp} | Meter: ${state.meter[i.user.id]}%` });
+        }
     }
 });
 
