@@ -185,4 +185,4 @@ client.on('interactionCreate', async (i) => {
     }
 });
 
-client.login('YOUR_TOKEN_HERE');
+client.login(process.env.TOKEN);
