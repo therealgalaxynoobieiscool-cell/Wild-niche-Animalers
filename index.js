@@ -62,21 +62,31 @@ function getUser(id) {
     return UserData.get(id);
 }
 
-// --- SLASH COMMANDS ---
+// --- SLASH COMMANDS (READY EVENT) ---
 client.on('ready', async () => {
     const commands = [
         new SlashCommandBuilder().setName('spawn').setDescription('Find a character in the Frontier'),
         new SlashCommandBuilder().setName('shop').setDescription('Open the Frontier Store'),
-        new SlashCommandBuilder().setName('profile').setDescription('View profile').addUserOption(o => o.setName('target')),
+        new SlashCommandBuilder()
+            .setName('profile')
+            .setDescription('View profile')
+            .addUserOption(o => o.setName('target').setDescription('The user to view')), // Fixed: Added description
         new SlashCommandBuilder().setName('achievements').setDescription('View your medals'),
         new SlashCommandBuilder().setName('upvote').setDescription('Get 12h of Free Premium'),
         new SlashCommandBuilder().setName('titles').setDescription('Equip your titles')
     ];
-    await client.application.commands.set(commands);
-    console.log("🤠 Frontier Engine Online!");
+
+    try {
+        await client.application.commands.set(commands);
+        console.log("🤠 Frontier Engine Online & Commands Registered!");
+    } catch (err) {
+        console.error("❌ Error registering commands:", err);
+    }
 });
 
 client.on('interactionCreate', async (i) => {
+    if (!i.isChatInputCommand() && !i.isButton()) return;
+    
     const u = getUser(i.user.id);
     const isPremium = u.isPermPremium || u.premiumUntil > Date.now();
 
@@ -108,7 +118,7 @@ client.on('interactionCreate', async (i) => {
         return i.reply({ embeds: [spawnEmbed], components: [btns] });
     }
 
-    // --- 2. BATTLE SYSTEM (HONOURED ONE LOGIC) ---
+    // --- 2. BATTLE SYSTEM ---
     if (i.isButton() && i.customId.startsWith('fight')) {
         const [_, name, variant] = i.customId.split('_');
         let playerHP = 100, enemyHP = 400, didRevive = false, didSwitch = false;
@@ -130,7 +140,6 @@ client.on('interactionCreate', async (i) => {
             if (b.user.id !== i.user.id) return b.reply({ content: "Not your battle!", ephemeral: true });
             if (b.customId === 'sw') didSwitch = true;
             
-            // Honoured One Trigger
             if (name === 'Gabor' && variant === 'true' && playerHP > 1) {
                 playerHP = 1; didRevive = true;
                 bEmbed.setTitle("✨ THE HONOURED ONE AWAKENS").setDescription("`Throughout Heaven and Earth... I alone am the Noober one.`");
@@ -164,7 +173,7 @@ client.on('interactionCreate', async (i) => {
         return i.reply({ embeds: [shop] });
     }
 
-    // --- 4. PROFILE & ACHIEVEMENTS ---
+    // --- 4. PROFILE ---
     if (i.commandName === 'profile') {
         const target = i.options.getUser('target') || i.user;
         const d = getUser(target.id);
