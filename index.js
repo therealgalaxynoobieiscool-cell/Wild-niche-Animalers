@@ -2,30 +2,37 @@ const { Client, GatewayIntentBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder
 const express = require('express');
 
 const app = express();
-app.get('/', (req, res) => res.send('Wild Niche: ALL BUTTONS OPERATIONAL'));
+app.get('/', (req, res) => res.send('Niche Animalers: COSMIC EDITION ONLINE'));
 app.listen(3000);
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
-// --- DATA ---
+// --- DATA & ROSTER ---
 const Characters = {
-    'Gabor': { hp: 400, ult: '🌈 IMAGINARY: BEIGE', uDmg: 1000, acts: [{name: 'Check', text: 'Beige energy.'}, {name: 'Fix WiFi', text: 'Router reset!'}] },
-    'Jay': { hp: 400, ult: '🌈 JACKPOT', uDmg: 888, acts: [{name: 'Check', text: 'RNG King.'}, {name: 'Coin Toss', text: 'He is mesmerized!'}] },
-    'Besumss': { hp: 500, ult: '🌈 WHEEL OF DOOM', uDmg: 900, acts: [{name: 'Check', text: 'Fast wheels.'}, {name: 'Oil Wheels', text: 'Squeak gone!'}] },
-    'Louka': { hp: 700, ult: '🌈 EVENT HORIZON', uDmg: 1500, acts: [{name: 'Check', text: 'Cosmic hair.'}, {name: 'Meditate', text: 'Inner peace.'}] },
-    'Laggyboi': { hp: 450, ult: '🌈 TIMEOUT', uDmg: 1500, acts: [{name: 'Check', text: 'High ping.'}, {name: 'Lower Graphics', text: 'FPS Boost!'}] },
-    'Helper': { hp: 300, ult: '🌈 WIKI BLAST', uDmg: 600, acts: [{name: 'Check', text: 'Tutorial bot.'}, {name: 'Read Manual', text: 'Helpful!'}] }
+    'Gabor': { hp: 400, tier: 'RARE', cosmic: { name: 'COSMIC: The Noober One', hp: 2000, uDmg: 2500 }, acts: [{name: 'Fix WiFi', text: 'Router reset!'}] },
+    'Jay': { hp: 400, tier: 'RARE', cosmic: { name: 'COSMIC: The Brainrotted', hp: 1500, uDmg: 2000 }, acts: [{name: 'Coin Toss', text: 'He is mesmerized!'}] },
+    'Besumss': { hp: 500, tier: 'UNCOMMON', variant: { name: 'Papa Besumss', hp: 1200, uDmg: 1800 }, acts: [{name: 'Tell Joke', text: 'Papa laughs!'}] },
+    'Smile': { hp: 450, tier: 'LEGENDARY', variant: { name: 'Divine Smile', hp: 1800, uDmg: 3000 }, acts: [{name: 'Pray', text: 'Light shines!'}] },
+    'Helper': { hp: 300, tier: 'COMMON', variant: { name: 'The Architect', hp: 900, uDmg: 1000 }, acts: [{name: 'Read Wiki', text: 'Knowledge!'}] },
+    'Laggyboi': { hp: 450, tier: 'UNCOMMON', variant: { name: 'Absolute Zero', hp: 1100, uDmg: 2000 }, acts: [{name: 'Lower FPS', text: 'Smooth!'}] }
+};
+
+const ShopItems = {
+    'bandage': { name: '🩹 Bandage', cost: 50, cur: 'WC', effect: 'HEAL' },
+    'milk': { name: '🥛 Papa\'s Secret Milk', cost: 200, cur: 'WC', effect: 'SILENCE' },
+    'skibidi': { name: '🚽 sk-ski-skibidi', cost: 150, cur: 'WC', effect: 'METER' },
+    'essence': { name: '✨ Niche Essence', cost: 50, cur: 'NC', effect: 'BUFF' },
+    'gold_card': { name: '💳 Niche Gold Card', cost: 1000, cur: 'NC', effect: 'CATCH' }
 };
 
 const UserData = new Map();
 const BattleStates = new Map();
 
-function getUser(id) {
+function getU(id) {
     if (!UserData.has(id)) UserData.set(id, { 
-        wc: 1000, collection: ['Helper', 'Gabor'], activeChar: 'Helper', 
-        playerHP: 300, items: { bandage: 2 }, premium: false, 
-        activeTitle: 'Newcomer', titles: ['Newcomer'], achievements: [], 
-        switchedThisFight: false, turns: 0, jayUltCount: 0
+        wc: 200, nc: 0, collection: ['Helper'], activeChar: 'Helper', 
+        playerHP: 300, items: { bandage: 1, milk: 0, skibidi: 0, essence: 0, gold_card: 0 }, 
+        activeTitle: 'Newcomer', titles: ['Newcomer'], achievements: [] 
     });
     return UserData.get(id);
 }
@@ -33,35 +40,34 @@ function getUser(id) {
 client.on('ready', async () => {
     const cmds = [
         new SlashCommandBuilder().setName('spawn').setDescription('Find a wild Animaler'),
-        new SlashCommandBuilder().setName('shop').setDescription('General Store'),
-        new SlashCommandBuilder().setName('profile').setDescription('Check your stats')
+        new SlashCommandBuilder().setName('shop').setDescription('Niche Market'),
+        new SlashCommandBuilder().setName('profile').setDescription('Check stats/NC balance')
     ];
     await client.application.commands.set(cmds);
-    console.log("🤠 All buttons wired and ready!");
+    console.log("🚀 Niche Engine V3: Fully Loaded");
 });
 
 client.on('interactionCreate', async (i) => {
-    const u = getUser(i.user.id);
+    const u = getU(i.user.id);
 
-    // --- NON-BATTLE COMMANDS ---
     if (i.isChatInputCommand()) {
         if (i.commandName === 'profile') {
-            const pEmbed = new EmbedBuilder()
-                .setTitle(`👤 ${i.user.username}'s Profile`)
-                .setColor(u.premium ? '#F1C40F' : '#3498DB')
+            const pEmbed = new EmbedBuilder().setTitle(`👤 ${i.user.username}`).setColor('#00FBFF')
                 .addFields(
                     { name: '🎖️ Title', value: `\`${u.activeTitle}\``, inline: true },
-                    { name: '💰 Balance', value: `${u.wc} WC`, inline: true },
+                    { name: '💰 WC', value: `${u.wc}`, inline: true },
+                    { name: '✨ NC', value: `${u.nc}`, inline: true },
                     { name: '🏆 Achievements', value: u.achievements.length > 0 ? u.achievements.join(', ') : 'None' }
                 );
             return i.reply({ embeds: [pEmbed] });
         }
 
         if (i.commandName === 'shop') {
-            const sEmbed = new EmbedBuilder().setTitle('🌵 SHOP').setColor('#2ECC71').setDescription(`💰 Balance: ${u.wc} WC`);
+            const sEmbed = new EmbedBuilder().setTitle('🛒 THE NICHE MARKET').setDescription(`💰: ${u.wc} WC | ✨: ${u.nc} NC`).setColor('#2ECC71');
             const row = new ActionRowBuilder().addComponents(
-                new ButtonBuilder().setCustomId('buy_bandage').setLabel('🟢 BUY BANDAGE (50)').setStyle(ButtonStyle.Success),
-                new ButtonBuilder().setCustomId('buy_premium').setLabel('🟢 BUY PREMIUM (5000)').setStyle(ButtonStyle.Success)
+                new ButtonBuilder().setCustomId('buy_bandage').setLabel('🩹 Bandage (50 WC)').setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId('buy_milk').setLabel('🥛 Secret Milk (200 WC)').setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId('buy_essence').setLabel('✨ Essence (50 NC)').setStyle(ButtonStyle.Primary)
             );
             return i.reply({ embeds: [sEmbed], components: [row] });
         }
@@ -69,14 +75,17 @@ client.on('interactionCreate', async (i) => {
         if (i.commandName === 'spawn') {
             const keys = Object.keys(Characters);
             const key = keys[Math.floor(Math.random() * keys.length)];
-            const char = Characters[key];
-            u.playerHP = Characters[u.activeChar].hp;
-            u.switchedThisFight = false; u.turns = 0; u.jayUltCount = 0;
+            const isCosmic = (key === 'Gabor' || key === 'Jay') && Math.random() < 0.03;
+            const isVariant = !isCosmic && Math.random() < 0.15;
+
+            const name = isCosmic ? Characters[key].cosmic.name : (isVariant ? Characters[key].variant.name : key);
+            const hp = isCosmic ? Characters[key].cosmic.hp : (isVariant ? Characters[key].variant.hp : Characters[key].hp);
             
-            const bEmbed = new EmbedBuilder().setTitle(`✨ WILD ${key.toUpperCase()}`).setDescription(`HP: ${char.hp}`).setColor('#FFEE00');
-            const row = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('btn_battle').setLabel('⚔️ BATTLE').setStyle(ButtonStyle.Danger));
+            const bEmbed = new EmbedBuilder().setTitle(isCosmic ? `🌌 ! COSMIC DETECTED !` : `✨ WILD ${name.toUpperCase()}`).setDescription(`HP: ${hp}`).setColor(isCosmic ? '#00FBFF' : '#FFEE00');
+            const row = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId(`btn_battle_${key}_${isCosmic?'C':'N'}`).setLabel('⚔️ BATTLE').setStyle(ButtonStyle.Danger));
             const msg = await i.reply({ embeds: [bEmbed], components: [row], fetchReply: true });
-            BattleStates.set(msg.id, { hp: char.hp, name: key, meter: 0, canSpare: false });
+            
+            BattleStates.set(msg.id, { hp, maxHP: hp, name, meter: 0, canSpare: false, isCosmic, itemsUsed: false });
             return;
         }
     }
@@ -84,117 +93,70 @@ client.on('interactionCreate', async (i) => {
     if (!i.isButton()) return;
     const state = BattleStates.get(i.message.id);
 
-    // --- SHOP LOGIC ---
-    if (i.customId.startsWith('buy_')) {
-        const item = i.customId.split('_')[1];
-        const cost = item === 'bandage' ? 50 : 5000;
-        if (u.wc < cost) return i.reply({ content: "❌ Too broke!", ephemeral: true });
-        u.wc -= cost;
-        if (item === 'premium') { u.premium = true; u.activeTitle = 'The Elite'; }
-        else u.items.bandage++;
-        return i.reply({ content: `✅ Bought ${item}!`, ephemeral: true });
-    }
-
-    if (!state) return;
-    const activeData = Characters[u.activeChar];
-
-    // --- NAVIGATION ---
-    if (i.customId === 'btn_battle' || i.customId === 'back') {
+    // --- BATTLE UI & BRAINROT ---
+    if (i.customId.startsWith('btn_battle') || i.customId === 'back') {
+        const battleState = state || BattleStates.get(i.message.id);
         const r1 = new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId('menu_atk').setLabel('⚔️ ATTACK').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId('menu_act').setLabel('💬 ACT').setStyle(ButtonStyle.Secondary)
+            new ButtonBuilder().setCustomId('menu_items').setLabel('🎒 ITEMS').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId('hit_ult').setLabel(`🌈 ULT`).setStyle(ButtonStyle.Success).setDisabled(battleState.meter < 100)
         );
-        const r2 = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('menu_switch').setLabel('🔄 SWITCH').setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder().setCustomId('menu_items').setLabel('🎒 ITEMS').setStyle(ButtonStyle.Secondary)
-        );
-        const r3 = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('menu_spare').setLabel('💛 SPARE').setStyle(ButtonStyle.Secondary),
-            new ButtonBuilder().setCustomId('hit_ult').setLabel(`🌈 ULT`).setStyle(ButtonStyle.Success).setDisabled(state.meter < 100)
-        );
-        return i.update({ content: `**Enemy:** ${state.name} (${state.hp} HP) | **You:** ${u.activeChar} (${u.playerHP} HP) | **Meter:** ${state.meter}%`, components: [r1, r2, r3] });
+        
+        const content = `**Enemy:** ${battleState.name} (${battleState.hp} HP)\n**You:** ${u.activeChar} (${u.playerHP} HP)\n**Meter:** ${battleState.meter}%`;
+        const embed = new EmbedBuilder().setColor(battleState.isCosmic ? '#00FBFF' : '#FF0000').setDescription(content);
+        
+        if (battleState.name.includes('Brainrotted')) {
+            embed.setImage('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJqZ3R4bmZ4bmZ4bmZ4/subway-surfers.gif');
+            embed.setFooter({ text: "SENSORY OVERLOAD ACTIVE" });
+        }
+
+        return i.update({ embeds: [embed], components: [r1], content: '' });
     }
 
-    // --- ATTACK SUB-MENU ---
-    if (i.customId === 'menu_atk') {
-        const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('hit_normal').setLabel('👊 Punch').setStyle(ButtonStyle.Danger),
-            new ButtonBuilder().setCustomId('hit_skill').setLabel('🔥 Skill').setStyle(ButtonStyle.Danger),
-            new ButtonBuilder().setCustomId('back').setLabel('🔙 BACK').setStyle(ButtonStyle.Secondary)
-        );
-        return i.update({ components: [row] });
-    }
-
-    // --- ITEMS SUB-MENU ---
+    // --- ITEM SYSTEM ---
     if (i.customId === 'menu_items') {
         const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId('use_bandage').setLabel(`🩹 Bandage (${u.items.bandage})`).setStyle(ButtonStyle.Success).setDisabled(u.items.bandage <= 0),
+            new ButtonBuilder().setCustomId('use_milk').setLabel(`🥛 Milk (${u.items.milk})`).setStyle(ButtonStyle.Secondary).setDisabled(u.items.milk <= 0),
             new ButtonBuilder().setCustomId('back').setLabel('🔙 BACK').setStyle(ButtonStyle.Secondary)
         );
-        return i.update({ content: "🎒 Select an item to use:", components: [row] });
+        return i.update({ content: "🎒 SELECT AN ITEM:", components: [row], embeds: [] });
     }
 
-    if (i.customId === 'use_bandage') {
-        u.items.bandage--;
-        u.playerHP = Math.min(u.playerHP + 100, Characters[u.activeChar].hp);
-        return i.update({ content: `🩹 Used a Bandage! Healed to ${u.playerHP} HP.`, components: [new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('back').setLabel('CONTINUE').setStyle(ButtonStyle.Primary))] });
+    if (i.customId === 'use_milk') {
+        u.items.milk--; state.itemsUsed = true;
+        return i.update({ content: "🥛 Threw the Expired Milk! Enemy can only use Melee!", components: [new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('back').setLabel('CONTINUE').setStyle(ButtonStyle.Primary))] });
     }
 
-    // --- COMBAT LOGIC ---
-    if (i.customId.startsWith('hit_')) {
-        u.turns++;
-        const type = i.customId.split('_')[1];
-        let dmg = 40; 
-        if (type === 'ult') dmg = activeData.uDmg;
-        if (type === 'skill') dmg = 70;
-
-        state.hp -= dmg;
-        state.meter = type === 'ult' ? 0 : Math.min(100, state.meter + 34);
-
+    // --- COMBAT LOGIC & ACHIEVEMENTS ---
+    if (i.customId === 'menu_atk') {
+        state.hp -= 150; state.meter = Math.min(100, state.meter + 25);
         if (state.hp <= 0) {
-            // Achievements check
-            if (u.activeChar === 'Gabor' && u.playerHP === 1) { u.achievements.push('The Honoured One'); u.activeTitle = 'The Honoured One'; }
-            u.collection.push(state.name); u.wc += 200;
+            u.collection.push(state.name); u.wc += 250;
+            let ncReward = state.isCosmic ? 5 : 0; u.nc += ncReward;
+            
+            // THE HONORED ONE CHECK
+            if (state.name.includes('Divine') && !state.itemsUsed && u.collection.includes('COSMIC: The Noober One') && u.collection.includes('COSMIC: The Brainrotted')) {
+                u.activeTitle = 'The Honored One'; u.achievements.push('The Honored One'); u.nc += 100;
+            }
+
             BattleStates.delete(i.message.id);
-            return i.update({ content: `🏆 Captured ${state.name}! Earned 200 WC.`, embeds: [], components: [] });
+            return i.update({ content: `🏆 Captured ${state.name}! Earned 250 WC and ${ncReward} NC.`, components: [], embeds: [] });
         }
-        u.playerHP = Math.max(1, u.playerHP - 25);
-        return i.update({ content: `💥 Dealt ${dmg} damage! Enemy hit back!`, components: [new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('back').setLabel('CONTINUE').setStyle(ButtonStyle.Primary))] });
+        u.playerHP -= 50;
+        return i.update({ content: `💥 Hit enemy! Enemy hit back!`, components: [new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('back').setLabel('CONTINUE').setStyle(ButtonStyle.Primary))] });
     }
 
-    // --- SPARE & ACT LOGIC ---
-    if (i.customId === 'menu_spare') {
-        if (!state.canSpare) return i.reply({ content: "❌ Try ACTing first!", ephemeral: true });
-        BattleStates.delete(i.message.id);
-        return i.update({ content: `💛 You spared ${state.name}!`, embeds: [], components: [] });
-    }
-
-    if (i.customId === 'menu_act') {
-        const row = new ActionRowBuilder().addComponents(
-            Characters[state.name].acts.map((a, idx) => new ButtonBuilder().setCustomId(`doact_${idx}`).setLabel(a.name).setStyle(ButtonStyle.Secondary))
-        );
-        return i.update({ components: [row] });
-    }
-
-    if (i.customId.startsWith('doact_')) {
-        state.canSpare = true;
-        const actText = Characters[state.name].acts[i.customId.split('_')[1]].text;
-        return i.update({ content: `💬 ${actText}`, components: [new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('back').setLabel('CONTINUE').setStyle(ButtonStyle.Primary))] });
-    }
-
-    // --- SWITCH LOGIC ---
-    if (i.customId === 'menu_switch') {
-        const row = new ActionRowBuilder().addComponents(
-            u.collection.slice(0, 5).map(c => new ButtonBuilder().setCustomId(`setchar_${c}`).setLabel(c).setStyle(ButtonStyle.Primary))
-        );
-        return i.update({ content: "🔄 Select an Animaler:", components: [row] });
-    }
-
-    if (i.customId.startsWith('setchar_')) {
-        u.activeChar = i.customId.split('_')[1];
-        u.playerHP = Characters[u.activeChar].hp;
-        u.switchedThisFight = true;
-        return i.update({ content: `✅ Switched to ${u.activeChar}!`, components: [new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('back').setLabel('CONTINUE').setStyle(ButtonStyle.Primary))] });
+    // --- SHOP LOGIC ---
+    if (i.customId.startsWith('buy_')) {
+        const itemKey = i.customId.split('_')[1];
+        const item = ShopItems[itemKey];
+        if (item.cur === 'WC' && u.wc < item.cost) return i.reply({ content: "Too broke!", ephemeral: true });
+        if (item.cur === 'NC' && u.nc < item.cost) return i.reply({ content: "Not enough NC!", ephemeral: true });
+        
+        item.cur === 'WC' ? u.wc -= item.cost : u.nc -= item.cost;
+        u.items[itemKey]++;
+        return i.reply({ content: `✅ Purchased ${item.name}!`, ephemeral: true });
     }
 });
 
